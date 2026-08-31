@@ -412,8 +412,8 @@ function App() {
   return (
     <div className={`app-shell ${collapsed ? 'sidebar-collapsed' : ''} ${compact ? 'compact' : ''}`}>
       <Sidebar activeView={activeView} collapsed={collapsed} mobileOpen={mobileOpen} onCollapse={() => setCollapsed(!collapsed)} onSelect={selectView} onClose={() => setMobileOpen(false)} onHelp={() => setNotice({ type: 'info', text: 'This workspace runs entirely on local files.' })} />
-      <div className="main-shell">
-        <Header current={current} theme={theme} onTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')} onMenu={() => setMobileOpen(true)} onUpload={() => fileInput.current?.click()} onLoadSample={loadSample} onRefresh={refreshWorkspace} loading={loading} hasData={rows.length > 0} />
+      <div className={`main-shell ${activeView === 'linehaul' ? 'linehaul-full' : ''}`}>
+        {activeView !== 'linehaul' && <Header current={current} theme={theme} onTheme={() => setTheme(theme === 'light' ? 'dark' : 'light')} onMenu={() => setMobileOpen(true)} onUpload={() => fileInput.current?.click()} onLoadSample={loadSample} onRefresh={refreshWorkspace} loading={loading} hasData={rows.length > 0} />}
         <main className="main-content">{content}</main>
         <footer>All times in local terminal time <span>·</span> Data remains on this device</footer>
       </div>
