@@ -491,3 +491,13 @@ footer span { color: var(--border-strong); }
 .trip-builder-dark .tb-lanes{padding-right:8px}
 .trip-builder-dark .tb-detail{padding-left:0}
 @media(max-width:850px){.trip-builder-dark .tb-body{grid-template-columns:1fr}.trip-builder-dark .tb-lanes{padding-right:0}.trip-builder-dark .tb-detail{padding-left:0}}
+/* Compact Trip Builder flow: remove outer canvas and vertical dead space. */
+.main-shell.linehaul-full .main-content{padding:12px 16px}
+.trip-builder-dark{max-width:none;margin:0;padding:0}
+.trip-builder-dark .tb-top{margin:0 0 14px}
+.trip-builder-dark .tb-stage-row{margin:0 0 10px;padding:8px 10px}
+.trip-builder-dark .tb-metrics{margin-bottom:10px}
+.trip-builder-dark .tb-builder-head{padding:9px 2px 10px}
+.trip-builder-dark .tb-body{min-height:0}
+.trip-builder-dark .tb-lanes{padding-top:8px;padding-bottom:0}
+.trip-builder-dark .tb-detail{padding-top:8px;padding-bottom:0}
