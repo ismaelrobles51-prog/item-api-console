@@ -486,3 +486,8 @@ footer span { color: var(--border-strong); }
 .trip-builder-dark .tb-lane{border-bottom:1px solid #ececf0;border-radius:8px}
 .trip-builder-dark .tb-lane:hover,.trip-builder-dark .tb-lane.active{border-color:#d7e9ff;background:#fff;box-shadow:none}
 @media(max-width:850px){.trip-builder-dark .tb-lanes{padding:8px 0;border-bottom:1px solid #e5e5ea}.trip-builder-dark .tb-detail{padding:16px 0}.trip-builder-dark .tb-body{min-height:0}}
+/* Use the workspace width continuously; no gutter between lane and detail views. */
+.trip-builder-dark .tb-body{grid-template-columns:300px minmax(0,1fr)}
+.trip-builder-dark .tb-lanes{padding-right:8px}
+.trip-builder-dark .tb-detail{padding-left:0}
+@media(max-width:850px){.trip-builder-dark .tb-body{grid-template-columns:1fr}.trip-builder-dark .tb-lanes{padding-right:0}.trip-builder-dark .tb-detail{padding-left:0}}
