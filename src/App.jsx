@@ -255,24 +255,25 @@ function LinehaulDashboard({ rows, rules, trips, terminalMap, selectedTerminal, 
     <section className="tb-builder"><div className="tb-builder-head"><div>Suggested Trips <span className="tb-badge">{lanes.length}</span></div><span>Capacity limit: 42,000 lbs</span></div><div className="tb-body"><aside className="tb-lanes">{lanes.length ? lanes.map(l=><button type="button" className={`tb-lane ${selected?.key===l.key?'active':''}`} onClick={()=>setActiveLane(l.key)} key={l.key}><div><strong><i>{l.current}</i> → <em>{l.next}</em></strong><b className={l.serviceRisk?'risk':''}>{l.action}</b></div><small><span>{l.count} orders · {l.pallets} plts · {Math.round(l.weight).toLocaleString()} lbs</span><span>{Math.round(l.utilization*100)}% full</span></small></button>) : <div className="tb-empty">No linehaul-eligible orders for these filters.</div>}</aside><div className="tb-detail">{selected ? <article className="tb-trip-card"><div className="tb-trip-top"><strong><i>{selected.current}</i> → <em>{selected.next}</em></strong><div><button type="button" className="tb-ghost">{selected.existingTrip ? `Co-load on ${field(selected.existingTrip,['tripnumber','id'])}` : 'Review capacity'}</button><button type="button" className="tb-primary">Build locally</button></div></div><p>{selected.pallets} Plts · {Math.round(selected.weight).toLocaleString()} Lbs · <b>{Math.round(selected.utilization*100)}% Full</b>{selected.earliest ? ` · MABD ${selected.earliest.toLocaleDateString()}` : ''}</p><div className="tb-progress"><div style={{width:`${Math.min(selected.utilization*100,100)}%`}}/></div><div className="tb-table-wrap"><table><thead><tr><th>PRO</th><th>Consignee city</th><th>State</th><th>Weight</th><th>Pallets</th><th>MABD</th><th>Status</th></tr></thead><tbody>{selected.orders.sort((a,b)=>Number(b.serviceRisk)-Number(a.serviceRisk)||a.dwell-b.dwell).map((r,i)=><tr key={i}><td>{field(r.order,['pro','pronumber'])||'—'}</td><td>{field(r.order,['destinationcity','consigneecity','city'])||'—'}</td><td>{field(r.order,['destinationstate','consigneestate','state'])||'—'}</td><td>{numberFor(r.order,['weight','totalweight','lbs']).toLocaleString()} lbs</td><td>{numberFor(r.order,['palletcount','pallets'])}</td><td>{dateValue(field(r.order,['mabd']))?.toLocaleString()||'—'}</td><td className={r.serviceRisk?'risk':'status'}>{r.status}</td></tr>)}</tbody></table></div></article> : <div className="tb-empty">Select a lane to review eligible orders.</div>}</div></div></section>
   </div>
 }
-function EmptyModule({ config, query, setQuery }) {
+function OperationalModule({ view, config, rows, trips, query, setQuery }) {
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const filteredLabel = query ? `No ${config.singular}s match “${query}”` : `No ${config.singular}s available`
-  return (
-    <div className="module-view">
-      <div className="module-toolbar">
-        <div className="search-wrap"><Search size={14} /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={`Search ${config.singular}s...`} /></div>
-        <button className={`secondary-button ${filtersOpen ? 'selected' : ''}`} type="button" aria-expanded={filtersOpen} onClick={() => setFiltersOpen(!filtersOpen)}><SlidersHorizontal size={13} /> Filters</button>
-      </div>
-      {filtersOpen && <div className="module-filters"><label>Status<select><option>All statuses</option><option>Unassigned</option><option>Complete</option></select></label><button type="button" onClick={() => setFiltersOpen(false)}><X size={13} /> Clear</button></div>}
-      <div className="table-panel">
-        <table className="data-table">
-          <thead><tr>{config.columns.map((column) => <th key={column}>{column}</th>)}</tr></thead>
-          <tbody><tr><td colSpan={config.columns.length}><div className="table-empty"><PackageSearch size={23} /><strong>{filteredLabel}</strong><span>Records will appear here when a local plan is loaded.</span></div></td></tr></tbody>
-        </table>
-      </div>
-    </div>
-  )
+  const orders = rows.map((order) => ({
+    order: field(order, ['ordernumber', 'order']) || '—', pro: field(order, ['pronumber', 'pro']) || '—', origin: field(order, ['currentterminal', 'originterminal', 'origin']) || '—', city: field(order, ['destinationcity', 'consigneecity']) || '—', state: field(order, ['destinationstate', 'consigneestate']) || '—', stage: field(order, ['currentstage', 'stage', 'status']) || '—', pallets: numberFor(order, ['palletcount', 'pallets']), weight: numberFor(order, ['weight', 'totalweight', 'lbs']), trip: field(order, ['assignedtrip', 'tripnumber']) || '—', customer: field(order, ['customer', 'billto']) || '—', local: String(field(order,['currentterminal','originterminal','origin'])).toUpperCase() === finalTerminal(order, {})
+  }))
+  const lanes = Object.values(orders.reduce((all, order) => { const key=`${order.origin} → ${order.state || '—'}`; const item=all[key] || { lane:key, orders:0, pallets:0, weight:0, status:'Review' }; item.orders++; item.pallets+=order.pallets; item.weight+=order.weight; all[key]=item; return all }, {}))
+  const terminalsData = terminals.slice(1).map((code) => { const matching=orders.filter(order=>order.origin===code); return { code, terminal:`${code} Terminal`, region:'Local plan', inbound:matching.filter(order=>order.local).length, outbound:matching.filter(order=>!order.local).length, status:matching.length?'Active':'No local freight' } })
+  const tripData = trips.map((trip) => { const id=field(trip,['tripnumber','id']); const assigned=orders.filter(order=>order.trip===id); return { trip:id, origin:assigned[0]?.origin || '—', destination:assigned[0]?.state || '—', status:field(trip,['status']) || 'Pre-Planned', trailer:'—', driver:'—', orders:assigned.length, weight:assigned.reduce((sum,order)=>sum+order.weight,0) } })
+  let columns = config.columns; let data = []; let cells = () => []
+  if (view === 'orders') { data=orders; cells=(r)=>[r.pro,r.origin,`${r.city}, ${r.state}`,r.stage,r.pallets,`${r.weight.toLocaleString()} lbs`] }
+  else if (view === 'shipments') { data=orders; cells=(r)=>[r.order,r.customer,`${r.city}, ${r.state}`,r.stage,'—',`${r.weight.toLocaleString()} lbs`] }
+  else if (view === 'audit') { data=orders; cells=(r)=>[r.pro,r.trip,r.customer,'Local plan','—',r.stage] }
+  else if (view === 'trips') { data=tripData; cells=(r)=>[r.trip,r.origin,r.destination,r.status,'—','—'] }
+  else if (view === 'consolidation') { data=lanes; cells=(r)=>[r.lane,r.orders,r.pallets,`${r.weight.toLocaleString()} lbs`,'Local review',r.status] }
+  else if (view === 'local') { data=orders.filter(order=>order.local); cells=(r)=>[r.origin,'Unassigned',1,'Local delivery','Ready',r.stage] }
+  else if (view === 'terminals') { data=terminalsData; cells=(r)=>[r.code,r.terminal,r.region,r.inbound,r.outbound,r.status] }
+  const filtered = data.filter((record) => !query || Object.values(record).join(' ').toLowerCase().includes(query.toLowerCase()))
+  const noLocalDataset = ['quotes', 'brokerage', 'drivers'].includes(view)
+  return <div className="module-view"><div className="module-toolbar"><div className="search-wrap"><Search size={14}/><input value={query} onChange={(event)=>setQuery(event.target.value)} placeholder={`Search ${config.singular}s...`}/></div><button className={`secondary-button ${filtersOpen?'selected':''}`} type="button" onClick={()=>setFiltersOpen(!filtersOpen)}><SlidersHorizontal size={13}/> Filters</button></div>{filtersOpen && <div className="module-filters"><label>Source<select><option>Local plan</option></select></label><button type="button" onClick={()=>setFiltersOpen(false)}><X size={13}/> Clear</button></div>}<div className="module-summary"><strong>{filtered.length}</strong> local {config.singular}{filtered.length===1?'':'s'}{noLocalDataset && ' available in the current plan'}</div><div className="table-panel"><table className="data-table"><thead><tr>{columns.map(column=><th key={column}>{column}</th>)}</tr></thead><tbody>{filtered.length ? filtered.slice(0,200).map((record,index)=><tr key={index}>{cells(record).map((value,cellIndex)=><td key={cellIndex}>{value}</td>)}</tr>) : <tr><td colSpan={columns.length}><div className="table-empty"><PackageSearch size={23}/><strong>{noLocalDataset ? `No ${config.singular} records in the local plan` : `No ${config.singular}s match this view`}</strong><span>{noLocalDataset ? 'This offline workspace has no compatible records for this module.' : 'Adjust the search or load a different local plan.'}</span></div></td></tr>}</tbody></table></div></div>
 }
 
 function AnalyticsView({ rows }) {
@@ -407,7 +408,7 @@ function App() {
   } else if (activeView === 'settings') {
     content = <SettingsView compact={compact} setCompact={setCompact} timeFormat={timeFormat} setTimeFormat={setTimeFormat} onSave={() => setNotice({ type: 'success', text: 'Preferences saved on this device' })} />
   } else {
-    content = <EmptyModule config={viewConfig[activeView]} query={query} setQuery={setQuery} />
+    content = <OperationalModule view={activeView} config={viewConfig[activeView]} rows={rows} trips={trips} query={query} setQuery={setQuery} />
   }
 
   return (
