@@ -38,7 +38,7 @@ const TRAILER_PALLET_CAPACITY = 54
 const TRAILER_CUBE_CAPACITY = 3400
 
 const navItems = [
-  { id: 'linehaul', label: 'Linehaul Manager', title: 'FR8 Dispatch', icon: LayoutGrid, subtitle: 'Hub & Spoke Operations' },
+  { id: 'linehaul', label: 'Linehaul Manager', title: 'ItemGPT', icon: LayoutGrid, subtitle: 'Hub & Spoke Operations' },
   { id: 'orders', label: 'Orders', icon: Folder, subtitle: 'Order Management' },
   { id: 'quotes', label: 'Quotes', icon: FileText, subtitle: 'Quote Workspace' },
   { id: 'trips', label: 'Trips', icon: Truck, subtitle: 'Trip Management' },
@@ -168,7 +168,7 @@ function Sidebar({ activeView, collapsed, mobileOpen, onCollapse, onSelect, onCl
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="brand-row">
           <div className="brand-mark"><Truck size={21} strokeWidth={1.9} /></div>
-          <span className="brand-name">FR8 Dispatch</span>
+          <span className="brand-name">ItemGPT</span>
           <button className="icon-button collapse-top" type="button" onClick={onCollapse} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
             {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
           </button>
