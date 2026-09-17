@@ -1,6 +1,8 @@
 # Imported HTML references (offline-only)
 
-These three user-supplied HTML snapshots are retained as **static source references** only. They are not bundled or executed by FR8 Dispatch. All `<script>` blocks, external resource links, and remote endpoint attributes were removed during import, so the references cannot make API/network calls.
+These user-supplied HTML snapshots are retained as offline-safe source references. All `<script>` blocks, external resource links, and remote endpoint attributes were removed during import, so the references cannot make API/network calls.
+
+The repository root `index.html` is generated from `tms-agent.static.html` and is the served, endpoint-free TMS Agent layout. The original `tms-agent.html` is retained only as the supplied source file and is not loaded by the application.
 
 | Source | Offline copy | Script blocks removed | External links removed | Source fingerprint |
 |---|---|---:|---:|---|
@@ -10,4 +12,4 @@ These three user-supplied HTML snapshots are retained as **static source referen
 
 | `tms-agent.before-auth-empty-detection-20260603-151250.html` | `tms-agent.before-auth-empty-detection-20260603-151250.static.html` | 3 | 1 | `1044d06167ec` |
 
-The snapshots are intentionally versioned separately: no files are imported into `src/`, avoiding duplicate application views/components. The dashboard uses only its existing local sample-data module.
+The legacy React prototype remains in `src/` for reference, but it is not loaded by the endpoint-free static entry page.
