@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FR8 Dispatch - Offline Layout</title>
+
+
+
+
+<link rel="stylesheet" href="styles.css?v=20260526-local-pd-contrast">
+</head>
+<body>
+
+<div class="app">
+
+<!-- ── Left sidebar ──────────────────────────────────────────── -->
+<aside class="sidebar">
+  <div class="sb-brand">
+    <div class="sb-logo">FR8</div>
+    <div class="sb-title">Local P&amp;D<span class="sb-title-sub">Operations</span></div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section-lbl">Operations</div>
+    <button class="sb-item tab-btn active"><span class="sb-ic">&#128200;</span><span>Overview</span></button>
+    <button class="sb-item tab-btn"><span class="sb-ic">&#128230;</span><span>Dispatch</span></button>
+    <button class="sb-item tab-btn"><span class="sb-ic">&#128203;</span><span>Dashboard Orders</span></button>
+    <button class="sb-item tab-btn"><span class="sb-ic">&#10133;</span><span>New Shipment</span></button>
+    <button class="sb-item tab-btn"><span class="sb-ic">&#128506;</span><span>Route Planner</span></button>
+    <button class="sb-item tab-btn"><span class="sb-ic">&#128666;</span><span>Equipment</span></button>
+    <button class="sb-item tab-btn"><span class="sb-ic">&#128666;</span><span>Drivers</span></button>
+
+    <div class="sb-section-lbl" style="margin-top:8px;">Coming Soon</div>
+    <a class="sb-item" href="../../" title="Open the main layout"><span class="sb-ic">&#8599;</span><span>Main Layout</span></a>
+    <div class="sb-item sb-ghost"><span class="sb-ic">&#9881;</span><span>Settings</span></div>
+  </nav>
+  <div class="sb-footer">
+    <div class="status-pill"><div class="dot" id="statusDot"></div><span id="statusText">Offline layout</span></div>
+    <div class="refresh-timer">No external connections</div>
+  </div>
+</aside>
+
+<!-- ── Main column ──────────────────────────────────────────── -->
+<main class="main">
+
+<!-- Top header: presentation-only filters -->
+<header class="hdr">
+  <div class="hdr-title-wrap">
+    <div class="hdr-title">Dispatch Console</div>
+    <div class="hdr-sub">Presentation-only operations layout</div>
+  </div>
+  <div class="hdr-spacer"></div>
+  <div class="hdr-right">
+    <label style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;">Date</label>
+    <input type="date" id="inputDate" style="width:140px;">
+    <label style="font-size:9px;color:var(--muted);font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;margin-left:4px;">Terminal</label>
+    <select id="inputWarehouse" class="hdr-terminal">
+      <option value="14872487">LAX (CA)</option><option value="15486971">ACT</option>
+      <option value="14653730">AUS</option><option value="13269923">DFW</option>
+      <option value="15601643">EWR</option><option value="2810">HAY</option>
+      <option value="224495">HOU</option><option value="15530587">MCO</option>
+      <option value="14875463">ORD</option><option value="404022">PHX</option>
+      <option value="57610">SAC</option><option value="5206461">SAT</option>
+      <option value="420462">SEA</option>
+    </select>
+    <button class="btn-primary" id="btnLoad" disabled>&#8635; Offline</button>
+    <button class="btn-primary ai" id="btnSuggest" disabled>&#129302; Preview</button>
+    <button class="btn-primary purple" id="btnExecutePlan" style="display:none;">&#9654; Execute Plan</button>
+  </div>
+</header>
+
+<div class="proxy-banner" id="proxyBanner">Static layout preview. Live dispatch services are intentionally unavailable.</div>
+
+<!-- KPI cards -->
+<section class="kpi-row">
+  <div class="kpi-card"><div class="kpi-ic blue">&#128230;</div><div class="kpi-body"><div class="kpi-val accent" id="statOrders">&mdash;</div><div class="kpi-lbl" id="lblOrders">Total Orders</div></div></div>
+  <div class="kpi-card"><div class="kpi-ic amber">&#128722;</div><div class="kpi-body"><div class="kpi-val warn" id="statUnassigned">&mdash;</div><div class="kpi-lbl" id="lblUnassigned">Unassigned</div></div></div>
+  <div class="kpi-card"><div class="kpi-ic red">&#9888;</div><div class="kpi-body"><div class="kpi-val danger" id="statLate">&mdash;</div><div class="kpi-lbl" id="lblLate">Late</div></div></div>
+  <div class="kpi-card"><div class="kpi-ic orange">&#128293;</div><div class="kpi-body"><div class="kpi-val danger" id="statHot">&mdash;</div><div class="kpi-lbl" id="lblHot">Hot</div></div></div>
+  <div class="kpi-card"><div class="kpi-ic green">&#128666;</div><div class="kpi-body"><div class="kpi-val green" id="statOnRoad">&mdash;</div><div class="kpi-lbl" id="lblOnRoad">On Road</div></div></div>
+</section>
+
+<!-- ══ DISPATCH OVERVIEW ═══════════════════════════════════════ -->
+<div class="overview-panel active" id="tabOverview">
+
+  <div class="ov-grid">
+    <div class="ov-card">
+      <div class="ov-card-header">
+        <div class="ov-card-title"><div class="ov-card-icon" style="background:#dcfce7;color:#16a34a;">&#128200;</div>Operational Stats</div>
+        <div class="ov-date-tools">
+          <select id="ovStatsDateSelect"></select>
+          <span class="ov-card-count" id="ovStatsDate">&mdash;</span>
+        </div>
+      </div>
+      <div id="ovStatsBody"><div class="ov-empty">Load data to see stats</div></div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-header">
+        <div class="ov-card-title"><div class="ov-card-icon" style="background:#dbeafe;color:#2563eb;">&#128666;</div>Drivers on Road</div>
+        <span class="ov-card-count" id="ovDriversCount">&mdash;</span>
+      </div>
+      <div id="ovDriversTable"><div class="ov-empty">No drivers loaded yet</div></div>
+    </div>
+  </div>
+
+  <div class="ov-grid-3">
+    <div class="ov-card">
+      <div class="ov-card-header">
+        <div class="ov-card-title"><div class="ov-card-icon" style="background:#dcfce7;color:#16a34a;">&#128230;</div>Active Loads</div>
+        <span class="ov-card-count" id="ovLoadsCount">&mdash;</span>
+      </div>
+      <div id="ovLoadsList"><div class="ov-empty">No active loads</div></div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-header">
+        <div class="ov-card-title"><div class="ov-card-icon" style="background:#ede9fe;color:#7c3aed;">&#128202;</div>Fleet Status</div>
+      </div>
+      <div id="ovFleetStatus"><div class="ov-empty">Load data to see fleet status</div></div>
+    </div>
+    <div class="ov-card">
+      <div class="ov-card-header">
+        <div class="ov-card-title"><div class="ov-card-icon" style="background:#ffedd5;color:#ea580c;">&#127970;</div>Top Customers</div>
+        <span class="ov-card-count" id="ovCustomersCount">&mdash;</span>
+      </div>
+      <div id="ovCustomersList"><div class="ov-empty">Log stop times via the driver timeline bar to build customer history</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="workspace" id="tabDispatch" style="display:none;">
+  <div class="orders-col">
+    <div class="col-header">
+      <div class="col-title"><span>Pickup Orders</span><span id="orderCount" style="color:var(--accent)">&mdash;</span></div>
+      <div class="dispatch-module-actions">
+        <button class="module-action-btn" id="btnSuggestInline" disabled>Suggest</button>
+      </div>
+      <div class="filters">
+        <button class="filter-btn">All</button>
+        <button class="filter-btn active">Unassigned</button>
+        <button class="filter-btn">Assigned</button>
+        <button class="filter-btn">&#128293; Hot</button>
+        <button class="filter-btn">&#9888; Late</button>
+      </div>
+      <div class="sel-bar" id="selBar" style="display:none;">
+        <span><span class="sel-count" id="selCount">0</span> selected</span>
+        <button>Select All Visible</button>
+        <button class="sel-clear">Clear</button>
+        <span class="sel-hint">Ctrl/&#8984;+click &middot; Shift+click</span>
+      </div>
+    </div>
+    <div class="orders-list" id="ordersList"><div class="loading">Start proxy &rarr; Load Data</div></div>
+  </div>
+
+  <div class="right-side">
+    <div class="map-col" style="display:none;">
+      <div id="mainMap"></div>
+      <div class="map-controls">
+        <button class="map-btn">&#8867; Fit All</button>
+        <button class="map-btn">&#8635; Refresh</button>
+      </div>
+    </div>
+    <div class="assign-strip">
+      <span class="assign-lbl">Order</span>
+      <div class="assign-val" id="selOrderVal">&mdash; select an order &mdash;</div>
+      <span class="assign-arrow">&rarr;</span>
+      <span class="assign-lbl">Driver</span>
+      <div class="assign-driver-wrap">
+        <input type="text" class="assign-driver-input" id="driverTypeahead"
+          placeholder="&mdash; type to search drivers on road &mdash;" autocomplete="off" spellcheck="false">
+        <div class="driver-suggest" id="driverSuggest" style="display:none;"></div>
+      </div>
+      <button class="btn-dispatch" id="btnDispatch" disabled>Assign</button>
+    </div>
+    <div class="drivers-col">
+      <div class="drivers-header">
+        <div class="drivers-title">Drivers On Road <span id="driverCount" style="color:var(--accent2)">&mdash;</span></div>
+        <input class="search-input" id="driverSearch" placeholder="Search driver...">
+      </div>
+      <div class="drivers-list">
+        <div class="drivers-grid" id="roadDriverList"><div class="loading" style="grid-column:1/-1">Load data to see drivers</div></div>
+      </div>
+      <div class="ai-toggle"><span>&#129302; AI Dispatch Assistant</span><span id="aiArrow">&#9650;</span></div>
+      <div class="ai-panel" id="aiPanel">
+        <div class="chat-messages" id="chatMessages">
+          <div class="msg ai"><div class="msg-bubble">Ask me about orders, drivers, or click Suggest Dispatch for AI recommendations!</div></div>
+        </div>
+        <div class="chat-input-row">
+          <textarea class="chat-input" id="chatInput" rows="2" placeholder="Ask anything..."></textarea>
+          <button class="btn-send" id="btnSend">&rarr;</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="suggestions-overlay" id="suggestionsOverlay">
+  <div class="suggestions-panel">
+    <div class="suggestions-header">
+      <div><h2>&#129302; AI Dispatch Suggestions</h2><div class="sub" id="suggestSubtitle"></div></div>
+      <button class="suggestions-close">&#x2715; Close</button>
+    </div>
+    <div class="suggestions-body" id="suggestionsBody"><div class="suggestion-loading">Analyzing orders and drivers...</div></div>
+    <div class="suggestions-footer">
+      <span id="suggestFooterText" style="font-family:var(--mono);font-size:11px;color:var(--muted)"></span>
+      <button class="btn-accept-all" id="btnAcceptAll" disabled>&#10003; Accept All &amp; Dispatch</button>
+    </div>
+  </div>
+</div>
+
+
+
+<!-- DASHBOARD ORDERS -->
+<div class="orders-page" id="tabOrders">
+  <div class="orders-page-head">
+    <div>
+      <h2>Dashboard Orders</h2>
+      <p>Open order search pulled from TMS Dashboard Order / Outbound.</p>
+    </div>
+    <div class="orders-page-actions">
+      <button class="eq-export-btn">Export CSV</button>
+      <button class="eq-dash-refresh">Search Orders</button>
+    </div>
+  </div>
+
+  <section class="orders-search-card">
+    <aside class="orders-summary">
+      <div><span>Shipment</span><strong id="doShipmentCount">0</strong></div>
+      <div><span>Pallets</span><strong id="doPallets">0</strong></div>
+      <div><span>Spaces</span><strong id="doSpaces">0</strong></div>
+      <div><span>Weight (Lbs)</span><strong id="doWeight">0</strong></div>
+      <div><span>Total Revenue</span><strong id="doRevenue">0</strong></div>
+      <div><span>Avg On-Time Service (%)</span><strong id="doOtd">0</strong></div>
+      <hr>
+      <div><span>Selected Pallets</span><strong id="doSelectedPallets">0</strong></div>
+      <div><span>Selected Spaces</span><strong id="doSelectedSpaces">0</strong></div>
+      <div><span>Selected Weight (Lbs)</span><strong id="doSelectedWeight">0</strong></div>
+      <div><span>Selected Revenue</span><strong id="doSelectedRevenue">0</strong></div>
+    </aside>
+
+    <div class="orders-filters">
+      <label>PU Number<input id="doPuNumber"></label>
+      <label class="wide">Bill To Name<textarea id="doBillTo" rows="3" placeholder="Please input billto name"></textarea></label>
+      <label>Group<select id="doGroup"><option value="">All</option></select></label>
+      <label>LH Delivery Date From<input type="date" id="doLhFrom"></label>
+      <label>LH Delivery Date To<input type="date" id="doLhTo"></label>
+
+      <label>Pro Number<textarea id="doProNumber" rows="4"></textarea></label>
+      <label>Consignee Zip From<input id="doZipFrom"></label>
+      <label>Consignee Zip To<input id="doZipTo"></label>
+      <label>Destination State<select id="doDestState"><option value="">Select Destination State</option><option>CA</option><option>AZ</option><option>NV</option><option>OR</option><option>WA</option><option>TX</option></select></label>
+      <label>Appointment Time From<select id="doApptTimeFrom"><option value="0">N/A</option></select></label>
+      <label>Appointment Time To<select id="doApptTimeTo"><option value="0">N/A</option></select></label>
+
+      <label>Scheduled P/U Date From<input type="date" id="doSchedPuFrom"></label>
+      <label>Scheduled P/U Date To<input type="date" id="doSchedPuTo"></label>
+      <label>Actual P/U Date From<input type="date" id="doActualPuFrom"></label>
+      <label>Actual P/U Date To<input type="date" id="doActualPuTo"></label>
+      <label>Delivery Apt Date From<input type="date" id="doDeliveryAptFrom"></label>
+      <label>Delivery Apt Date To<input type="date" id="doDeliveryAptTo"></label>
+      <label>Delivery Date From<input type="date" id="doDeliveryFrom"></label>
+      <label>Delivery Date To<input type="date" id="doDeliveryTo"></label>
+
+      <label class="wide">Stage Status<select id="doStageStatus"><option value="">Select Stage Statuses</option><option value='["0","1","2","3"]'>All Open</option><option value='["0"]'>Pickup</option><option value='["1"]'>Linehaul</option><option value='["2"]'>Pickup Complete</option><option value='["3"]'>Linehaul Complete</option><option value='["4"]'>Out for Delivery</option><option value='["5"]'>Delivered</option></select></label>
+      <label>SHPR TRM<select id="doShprTrm"><option value="">Select SHPR TRM</option></select></label>
+      <label>CNSE TRM<select id="doCnseTrm"><option value="">Select CNSE TRM</option></select></label>
+      <label>SVCS TRM<select id="doSvcsTrm"><option value="">Select SVCS TRM</option></select></label>
+      <label>Current Location<select id="doCurrentLoc"><option value="">Select Current Locations</option></select></label>
+
+      <div class="orders-filter-actions">
+        <button>Clear Fields</button>
+        <button>Search</button>
+        <button>Export</button>
+        <button>Customize Table</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="orders-results-card">
+    <div class="orders-results-head">
+      <div><h3>Open Orders</h3><span id="doResultText">Showing results 0 of 0 result(s)</span></div>
+      <label>Results per page<input id="doPageSize" value="250" maxlength="4"><button>Go</button></label>
+    </div>
+    <div class="orders-legend">
+      <span class="danger">Mismatch between MABD date and delivery appointment date</span>
+      <span><i class="green"></i> Arrived at current location</span>
+      <span><i class="slate"></i> Dispatched but not picked up</span>
+      <span><i class="white"></i> No pickup dispatch</span>
+    </div>
+    <div class="orders-table-wrap">
+      <table class="orders-table" id="dashboardOrdersTable">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="doSelectAll"></th>
+            <th>Pro</th><th>PU #</th><th>Manifest</th><th>Actual P/U Date</th><th>Delivery Apt Date</th><th>Delivery Apt Time</th><th>MABD From</th><th>MABD To</th><th>Delivery Date</th><th>Shipper</th><th>City</th><th>Zip</th><th>Consignee</th><th>Consignee Address</th><th>City</th><th>Zip</th><th>State</th><th>Plts</th><th>Lbs</th><th>Current Location</th><th>SHPR TRM</th><th>CNSE TRM</th><th>SVCS TRM</th><th>Stage Status</th><th>Pickup Driver</th><th>Scheduled P/U Date</th><th>Info</th><th>PNL</th><th>Rating</th><th>LH Trip</th>
+          </tr>
+        </thead>
+        <tbody id="dashboardOrdersBody"><tr><td colspan="31" class="orders-empty">Use the filters above, then click Search.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- NEW SHIPMENT -->
+<div class="shipment-page" id="tabNewShipment">
+  <div class="shipment-head">
+    <div>
+      <h2>New Shipment</h2>
+      <p>Create pickup, shipper, consignee, and freight details in the UNIS dispatch console.</p>
+    </div>
+    <div class="shipment-head-actions">
+      <button class="eq-dash-refresh">New / Reset</button>
+      <button class="eq-export-btn">Save Draft</button>
+    </div>
+  </div>
+
+  <div class="shipment-shell">
+    <aside class="shipment-rail">
+      <div class="shipment-rail-block active">PU</div>
+      <div class="shipment-rail-block">SHIPT 1</div>
+      <div class="shipment-rail-block">PRO</div>
+      <div class="shipment-rail-sub">File Manager</div>
+      <div class="shipment-rail-sub">Shipper</div>
+      <div class="shipment-rail-sub">Consignee</div>
+      <div class="shipment-rail-sub">Freight</div>
+    </aside>
+
+    <section class="shipment-main">
+      <div class="shipment-stepper">
+        <span class="active">New</span>
+        <span>Pickup Confirmed</span>
+        <span>Pickup Completed</span>
+        <span>In Transit</span>
+        <span>OFD</span>
+        <span>Delivered</span>
+        <span>Invoiced</span>
+      </div>
+
+      <section class="shipment-card">
+        <div class="shipment-card-title">PRO / Order Status</div>
+        <div class="ns-grid ns-grid-5">
+          <label>PRO Number<input data-ns="proNumber" id="nsProNumber"></label>
+          <label>Stage<select data-ns="stage"><option>Pickup</option><option>Linehaul</option><option>Delivery</option><option>Complete</option></select></label>
+          <label>Shipment Status<select data-ns="shipmentStatus"><option>Order</option><option>Processing</option><option>Complete</option><option>Invoice</option><option>Cancelled</option></select></label>
+          <label>Shipment Priority<select data-ns="priority"><option value="">Select</option><option>Hot</option><option>Medium</option><option>Low</option></select></label>
+          <label>Terminal<select data-ns="terminal" id="nsTerminal"></select></label>
+        </div>
+      </section>
+
+      <section class="shipment-card shipment-file">
+        <div class="shipment-card-title">File Manager</div>
+        <div class="shipment-drop">
+          <span>Drop files here</span>
+          <button>Add File</button>
+          <button>Show Archive</button>
+        </div>
+      </section>
+
+      <section class="shipment-card">
+        <div class="shipment-card-title">Shipper</div>
+        <div class="ns-grid ns-grid-4">
+          <input type="hidden" data-ns="shipperLocationId" id="nsShipperLocationId">
+          <label class="wide ns-autocomplete">Shipper Search<input data-ns="shipperSearch" id="nsShipperSearch" placeholder="Search by name, street, phone, or email" autocomplete="off"><div class="ns-suggest" id="nsShipperSuggest"></div></label>
+          <label>Contact<input data-ns="shipperContact"></label>
+          <label>Phone<input data-ns="shipperPhone"></label>
+          <label>Ready<select data-ns="shipperReady"><option>N/A</option><option>Ready</option><option>Not Ready</option></select></label>
+          <label>Scheduled P/U Date<input type="date" data-ns="pickupDate" id="nsPickupDate"></label>
+          <label>Close<select data-ns="shipperClose"><option>N/A</option><option>Close</option><option>Open</option></select></label>
+          <label>SHP TRM<select data-ns="shipperTerminal"><option value="">-</option><option>LAX</option><option>ONT</option><option>HAY</option><option>SAC</option><option>PHX</option></select></label>
+          <label class="wide-2">Notes<textarea data-ns="shipperNotes" rows="3"></textarea></label>
+          <label>Street<input data-ns="shipperStreet"></label>
+          <label>Unit<input data-ns="shipperUnit"></label>
+          <label>City<input data-ns="shipperCity"></label>
+          <label>State<input data-ns="shipperState" maxlength="2"></label>
+          <label>ZIP<input data-ns="shipperZip"></label>
+          <label>P/U From<input type="time" data-ns="pickupFrom"></label>
+          <label>P/U To<input type="time" data-ns="pickupTo"></label>
+          <label>Pickup #<input data-ns="pickupNumber"></label>
+          <label>RN<input data-ns="shipperRn"></label>
+          <label>DN<input data-ns="shipperDn"></label>
+          <label>Tracking #<input data-ns="tracking"></label>
+          <label>Trailer<input data-ns="trailer"></label>
+          <label>Container<input data-ns="container"></label>
+          <label>Reason<input data-ns="shipperReason"></label>
+          <label>Reason Note<input data-ns="shipperReasonNote"></label>
+        </div>
+      </section>
+
+      <section class="shipment-card">
+        <div class="shipment-card-title">Consignee</div>
+        <div class="ns-grid ns-grid-4">
+          <input type="hidden" data-ns="consigneeLocationId" id="nsConsigneeLocationId">
+          <label class="wide ns-autocomplete">Consignee Search<input data-ns="consigneeSearch" id="nsConsigneeSearch" placeholder="Search by name, street, phone, or email" autocomplete="off"><div class="ns-suggest" id="nsConsigneeSuggest"></div></label>
+          <label>Contact<input data-ns="consigneeContact"></label>
+          <label>Phone<input data-ns="consigneePhone"></label>
+          <label>PO #<input data-ns="poNumber"></label>
+          <label>Reference #<input data-ns="referenceNumber"></label>
+          <label>Load #<input data-ns="loadNumber"></label>
+          <label>ARN<input data-ns="arn"></label>
+          <label class="wide-2">Notes<textarea data-ns="consigneeNotes" rows="3"></textarea></label>
+          <label>Street<input data-ns="consigneeStreet"></label>
+          <label>Unit<input data-ns="consigneeUnit"></label>
+          <label>City<input data-ns="consigneeCity"></label>
+          <label>State<input data-ns="consigneeState" maxlength="2"></label>
+          <label>ZIP<input data-ns="consigneeZip"></label>
+          <label>Delivery Date<input type="date" data-ns="deliveryDate" id="nsDeliveryDate"></label>
+          <label>Delivery From<input type="time" data-ns="deliveryFrom"></label>
+          <label>Delivery To<input type="time" data-ns="deliveryTo"></label>
+          <label>MABD From<input type="date" data-ns="mabdFrom"></label>
+          <label>MABD To<input type="date" data-ns="mabdTo"></label>
+        </div>
+      </section>
+
+      <section class="shipment-card">
+        <div class="shipment-card-title">Freight Details</div>
+        <div class="ns-grid ns-grid-6">
+          <label>Pieces<input type="number" min="0" data-ns="pieces"></label>
+          <label>Pallets<input type="number" min="0" data-ns="pallets"></label>
+          <label>Weight<input type="number" min="0" data-ns="weight"></label>
+          <label>Class<input data-ns="freightClass"></label>
+          <label>NMFC<input data-ns="nmfc"></label>
+          <label>Hazmat<select data-ns="hazmat"><option>No</option><option>Yes</option></select></label>
+          <label class="wide-3">Description<input data-ns="description"></label>
+          <label class="wide-3">Special Instructions<input data-ns="specialInstructions"></label>
+        </div>
+      </section>
+    </section>
+  </div>
+
+  <div class="shipment-action-bar">
+    <button>Add Order</button>
+    <button>New / Reset</button>
+    <button>Split Pickup</button>
+    <button>Copy Pickup</button>
+    <button>Add Location</button>
+    <button>Advanced</button>
+    <button>Open All</button>
+  </div>
+</div>
+
+<div class="routing-panel" id="tabRouting">
+  <div class="routing-toolbar">
+    <span class="routing-toolbar-title">&#128506; Route Planner</span>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <label style="font-family:var(--mono);font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Date</label>
+      <input type="date" id="routeDate" style="background:var(--navy2);border:1px solid var(--navy3);border-radius:4px;color:#e2e8f0;font-family:var(--mono);font-size:11px;padding:4px 8px;outline:none;">
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;">
+      <label style="font-family:var(--mono);font-size:10px;color:#94a3b8;text-transform:uppercase;letter-spacing:1px;">Terminal</label>
+      <select id="routeTerminal" style="background:var(--navy2);border:1px solid var(--navy3);border-radius:4px;color:#e2e8f0;font-family:var(--mono);font-size:11px;padding:4px 8px;outline:none;"></select>
+    </div>
+    <button class="btn-route">&#8635; Load Orders</button>
+    <button class="btn-generate" id="btnGeneratePlan" disabled>&#9654; Generate Plan (0 selected)</button>
+    <button class="btn-route" title="Manage delivery exclusion list" style="background:#1e293b;border:1px solid #334155;">&#128683; Exclusions <span id="exclCount" style="opacity:.7;font-size:9px;">(0)</span></button>
+    <button class="btn-route" title="Test geocoding + proxy connection" style="background:#1e293b;border:1px solid #334155;">&#128270; Map Diag</button>
+    <span style="font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto" id="routeStatus">Select date and click Load Orders</span>
+  </div>
+
+  <!-- Freight Review Panel -->
+  <div class="freight-review collapsed" id="freightReview">
+    <div class="fr-header">
+      <span class="fr-title">&#128230; Freight Review</span>
+      <span style="font-family:var(--mono);font-size:10px;color:#64748b;" id="frHeaderSummary">Load orders to review available freight</span>
+      <span class="fr-arrow" id="frArrow">&#9660;</span>
+    </div>
+    <div id="frTabsRow" style="display:none;">
+      <div class="fr-tabs">
+        <button class="fr-tab tab-ready active">&#9989; Ready <span class="fr-badge" id="frBadgeReady">—</span></button>
+        <button class="fr-tab tab-appt">&#128197; Appt Today <span class="fr-badge" id="frBadgeAppt">—</span></button>
+        <button class="fr-tab tab-future">&#9200; Future Appts <span class="fr-badge" id="frBadgeFuture">—</span></button>
+        <button class="fr-tab tab-pending">&#9997; Pending Appt <span class="fr-badge" id="frBadgePending">—</span></button>
+        <button class="fr-tab tab-enroute" title="Freight headed to this terminal but not ready there yet">&#128666; Enroute <span class="fr-badge" id="frBadgeEnroute">—</span></button>
+        <button class="fr-tab tab-excluded" title="Orders matching the Exclusions list — pre-unchecked; override here if needed">&#128683; Excluded <span class="fr-badge" id="frBadgeExcluded">—</span></button>
+        <button class="fr-selall">All</button>
+        <button class="fr-selall">None</button>
+      </div>
+      <div class="fr-filter-row" id="frFilterRow">
+        <span class="fr-filter-label">Filter:</span>
+        <input class="fr-filter-input" id="frFilterPro" placeholder="PRO #">
+        <input class="fr-filter-input" id="frFilterConsignee" placeholder="Consignee">
+        <input class="fr-filter-input" id="frFilterCity" placeholder="City">
+        <select class="fr-filter-select" id="frFilterZone">
+          <option value="">All Zones</option>
+        </select>
+        <button class="fr-filter-clear">&#x2715; Clear</button>
+        <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:#64748b;" id="frFilterCount"></span>
+      </div>
+      <div class="fr-body" id="frBody"></div>
+      <div class="fr-summary" id="frSummary"></div>
+    </div>
+  </div>
+
+  <div class="rp-layout" id="rpLayout">
+    <aside class="rp-sidebar">
+      <div class="rp-sidebar-header">
+        <div class="rp-sidebar-title">All Routes</div>
+        <div class="rp-search-wrap"><input class="rp-search" id="rpSearch" placeholder="Search routes..."></div>
+      </div>
+      <div class="rp-toolbar" id="rpToolbar"></div>
+      <div class="rp-list" id="rpList">
+        <div class="rp-empty">No routes yet. Load orders above, review freight, then click Generate Plan.</div>
+      </div>
+    </aside>
+    <section class="rp-detail" id="rpDetail">
+      <div class="rp-welcome">
+        <div class="rp-welcome-big">&#128506; Route Plan Overview</div>
+        Select a route from the left to view its plan details, stop sequence, and timeline.<br>
+        <button class="rp-welcome-btn">&#128506; View All Routes on Map</button>
+      </div>
+    </section>
+  </div>
+  <div class="routing-grid" id="routingGrid" style="display:none;"></div>
+</div>
+
+<!-- ══ EQUIPMENT DATABASE ════════════════════════════════════ -->
+<div class="eq-panel" id="tabEquipment">
+  <div class="eq-layout">
+    <aside class="eq-sidebar">
+      <div class="eq-sidebar-header">
+        <div class="eq-search-wrap"><input class="eq-search" id="eqSearch" placeholder="Search VIN, plate, name..."></div>
+        <div class="eq-stats"><span><strong id="eqCount">—</strong> vehicles</span><span style="margin-left:auto;color:var(--muted)" id="eqSourceLbl">Local DB</span></div>
+      </div>
+      <div class="eq-list" id="eqList"><div class="eq-list-empty">Click anywhere on the page to load equipment database&hellip;</div></div>
+    </aside>
+    <section class="eq-detail" id="eqDetail">
+      <div class="eq-welcome"><div class="eq-welcome-big">Equipment Dashboard</div>Open Equipment to load dashboard widgets.</div>
+    </section>
+  </div>
+</div>
+
+<!-- ══ DRIVERS (TMS Driver Mgmt) ═══════════════════════════════ -->
+<div class="drivers-page" id="tabDrivers">
+  <div class="drivers-page-head">
+    <div>
+      <h2>TMS Driver Management</h2>
+      <p>Live driver profile/location data pulled from TMS Driver Mgmt.</p>
+    </div>
+    <div class="drivers-page-actions">
+      <button class="eq-export-btn">Export CSV</button>
+      <button class="eq-dash-refresh">Refresh Drivers</button>
+    </div>
+  </div>
+  <div id="driversPageBody">
+    <div class="eq-loading">Open Drivers to load TMS driver profile data.</div>
+  </div>
+</div>
+
+</main>
+</div>
+<!-- /.app shell -->
+
+<!-- Delivery Exclusions Modal -->
+<div class="excl-modal-backdrop" id="exclModalBackdrop" style="display:none;">
+  <div class="excl-modal">
+    <div class="excl-modal-header">
+      <span>&#128683; Delivery Exclusions</span>
+      <button class="excl-close" title="Close">&times;</button>
+    </div>
+    <div class="excl-modal-body">
+      <p class="excl-help">Orders with deliveries matching any entry below will be <strong>excluded</strong> from route planning.<br>
+      Enter consignee names or city names. Matching is case-insensitive and uses substrings.</p>
+      <div class="excl-input-row">
+        <input type="text" id="exclNewInput" placeholder="e.g. WALMART DC #6094 or  EL CENTRO">
+        <button class="btn-route">&#10133; Add</button>
+      </div>
+      <div class="excl-list" id="exclList"></div>
+    </div>
+    <div class="excl-modal-footer">
+      <span style="font-family:var(--mono);font-size:10px;color:#94a3b8;">Saved locally to this browser</span>
+      <button class="btn-route" style="background:var(--accent);">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Floating driver timeline bar (shown when a trip card is selected) -->
+<div class="dtb" id="driverTimelineBar" aria-hidden="true">
+  <div class="dtb-header">
+    <div class="dtb-title" id="dtbTitle">—</div>
+    <div class="dtb-stats" id="dtbStats"></div>
+    <button class="dtb-close" id="dtbClose" title="Close timeline (Esc)">&times;</button>
+  </div>
+  <div class="dtb-body" id="dtbBody"></div>
+  <div class="dtb-hint">Click any blue/green badge to log the driver's actual dwell time at that stop &mdash; this builds history for future estimates</div>
+</div>
+
+
+</body>
+</html>

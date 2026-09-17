@@ -1,0 +1,1180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TMS Proxy Analytics</title>
+  <style>
+    :root {
+      --bg: #f6f7f4;
+      --surface: #ffffff;
+      --surface-2: #eef2ef;
+      --ink: #1f2528;
+      --muted: #69737a;
+      --line: #d9dfda;
+      --blue: #2f6f9f;
+      --green: #2f7d57;
+      --amber: #b7791f;
+      --red: #b94a48;
+      --teal: #277c83;
+      --shadow: 0 1px 2px rgba(31, 37, 40, .08), 0 8px 24px rgba(31, 37, 40, .06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.35;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      border-bottom: 1px solid var(--line);
+      background: rgba(246, 247, 244, .94);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar-inner {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 16px;
+      align-items: center;
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 14px 20px;
+    }
+
+    .title h1 {
+      margin: 0;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .title p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      justify-content: stretch;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+      max-width: 720px;
+    }
+
+    .date-control {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr);
+      align-items: center;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .date-control input {
+      width: 100%;
+      min-height: 36px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+      border-radius: 6px;
+      padding: 7px 9px;
+    }
+
+    .icon-button, .primary-button {
+      min-height: 36px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--ink);
+      cursor: pointer;
+      box-shadow: 0 1px 1px rgba(31, 37, 40, .04);
+    }
+
+    .icon-button {
+      width: 100%;
+      display: inline-grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    .primary-button {
+      padding: 7px 13px;
+      width: 100%;
+      background: var(--blue);
+      border-color: var(--blue);
+      color: #fff;
+      font-weight: 650;
+    }
+
+    .page-tabs {
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 3px;
+      width: fit-content;
+    }
+
+    .page-tab {
+      min-height: 32px;
+      border: 0;
+      border-radius: 6px;
+      padding: 6px 11px;
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .page-tab.active {
+      background: var(--blue);
+      color: #fff;
+    }
+
+    .analytics-page[hidden] {
+      display: none;
+    }
+
+    .primary-button[disabled], .icon-button[disabled] {
+      opacity: .62;
+      cursor: wait;
+    }
+
+    .page {
+      max-width: 1480px;
+      margin: 0 auto;
+      padding: 18px 20px 36px;
+    }
+
+    .status-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      min-height: 32px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 2px 9px;
+      background: var(--surface);
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .badge.good {
+      border-color: rgba(47, 125, 87, .32);
+      color: var(--green);
+      background: rgba(47, 125, 87, .08);
+    }
+
+    .badge.warn {
+      border-color: rgba(183, 121, 31, .34);
+      color: var(--amber);
+      background: rgba(183, 121, 31, .09);
+    }
+
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 14px 0 18px;
+    }
+
+    .kpi {
+      min-height: 104px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: grid;
+      align-content: space-between;
+      gap: 10px;
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .kpi:hover, .kpi:focus-visible, .kpi.active {
+      border-color: rgba(47, 111, 159, .55);
+      box-shadow: 0 0 0 3px rgba(47, 111, 159, .12), var(--shadow);
+      outline: none;
+    }
+
+    .kpi .label {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .kpi .value {
+      font-size: 28px;
+      font-weight: 760;
+      letter-spacing: 0;
+      white-space: nowrap;
+    }
+
+    .kpi .note {
+      min-height: 18px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .visual-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+      gap: 12px;
+      margin: 0 0 18px;
+    }
+
+    .visual-kpi {
+      min-height: 268px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    .visual-kpi-header {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: baseline;
+      padding: 12px 14px 8px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .visual-kpi-title {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .visual-kpi-value {
+      font-size: 18px;
+      font-weight: 760;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+    }
+
+    .visual-kpi-chart {
+      height: 204px;
+      padding: 8px 10px 12px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(380px, .65fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .section {
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      margin-top: 16px;
+    }
+
+    .panel-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      min-height: 280px;
+      overflow: hidden;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+    }
+
+    .panel-title {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .panel-subtitle {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .chart-wrap {
+      height: 250px;
+      padding: 10px 12px 14px;
+    }
+
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .table-wrap {
+      max-height: 430px;
+      overflow: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th, td {
+      border-bottom: 1px solid var(--line);
+      padding: 9px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: var(--surface-2);
+      z-index: 1;
+      color: #3a4247;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    td.num, th.num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .sidebar {
+      display: grid;
+      gap: 14px;
+    }
+
+    .wide {
+      grid-column: 1 / -1;
+    }
+
+    .source-list {
+      display: grid;
+      gap: 8px;
+      padding: 12px 14px 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .source-row {
+      display: grid;
+      grid-template-columns: 118px minmax(0, 1fr);
+      gap: 10px;
+      align-items: baseline;
+    }
+
+    .source-row strong {
+      color: var(--ink);
+      font-weight: 680;
+    }
+
+    .empty {
+      padding: 24px 14px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .drilldown-panel {
+      display: none;
+      margin: 0 0 18px;
+    }
+
+    .drilldown-panel.open {
+      display: block;
+    }
+
+    .drilldown-summary {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfcfb;
+    }
+
+    .drilldown-stat {
+      display: grid;
+      gap: 3px;
+      min-height: 54px;
+    }
+
+    .drilldown-stat span {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .drilldown-stat strong {
+      font-size: 18px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .drilldown-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .drilldown-filter {
+      min-height: 32px;
+      width: min(360px, 100%);
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 6px 9px;
+      background: var(--surface);
+      color: var(--ink);
+    }
+
+    .drilldown-table {
+      max-height: 390px;
+    }
+
+    .linehaul-analysis {
+      border-top: 1px solid var(--line);
+      background: #fbfcfb;
+    }
+
+    .drilldown-panel.linehaul-compact > .panel-header,
+    .drilldown-panel.linehaul-compact > .drilldown-summary,
+    .drilldown-panel.linehaul-compact .linehaul-cost-summary {
+      display: none;
+    }
+
+    .drilldown-panel.linehaul-compact .linehaul-analysis {
+      border-top: 0;
+    }
+
+    .linehaul-cost-summary {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(145px, 1fr));
+      gap: 10px;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .linehaul-cost-card {
+      min-height: 74px;
+      display: grid;
+      gap: 4px;
+      align-content: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 10px 12px;
+    }
+
+    .linehaul-cost-card span {
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    .linehaul-cost-card strong {
+      font-size: 20px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .linehaul-cost-card small {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .linehaul-analysis-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      padding: 12px 14px;
+    }
+
+    .analysis-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .analysis-card.wide {
+      grid-column: 1 / -1;
+    }
+
+    .analysis-card-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .analysis-card-header h3 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 760;
+      letter-spacing: 0;
+    }
+
+    .analysis-card-header span, .comparison-note {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .analysis-table {
+      max-height: 300px;
+      overflow: auto;
+    }
+
+    .savings-good {
+      color: var(--green);
+      font-weight: 700;
+    }
+
+    .savings-bad {
+      color: var(--red);
+      font-weight: 700;
+    }
+
+    .total-row td {
+      position: sticky;
+      bottom: 0;
+      background: var(--surface-2);
+      border-top: 2px solid var(--line);
+      font-weight: 760;
+      z-index: 1;
+    }
+
+    .comparison-note {
+      padding: 0 14px 12px;
+    }
+
+    .terminal-hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 16px;
+      align-items: start;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      margin: 14px 0 16px;
+    }
+
+    .terminal-hero h2 {
+      margin: 0 0 4px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    .terminal-hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .terminal-source {
+      display: grid;
+      gap: 4px;
+      text-align: right;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .terminal-kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(160px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .terminal-kpi {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 13px 14px;
+      min-height: 96px;
+    }
+
+    .terminal-kpi span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 7px;
+    }
+
+    .terminal-kpi strong {
+      display: block;
+      font-size: 24px;
+      letter-spacing: 0;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .terminal-kpi small {
+      display: block;
+      color: var(--muted);
+      margin-top: 5px;
+      font-size: 12px;
+    }
+
+    .terminal-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(360px, .8fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .status-chip {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 58px;
+      border-radius: 999px;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .status-chip.green { color: var(--green); background: rgba(47, 125, 87, .10); }
+    .status-chip.yellow { color: var(--amber); background: rgba(183, 121, 31, .12); }
+    .status-chip.red { color: var(--red); background: rgba(185, 74, 72, .10); }
+    .status-chip.gray { color: var(--muted); background: var(--surface-2); }
+
+    .action-list {
+      display: grid;
+      gap: 10px;
+      padding: 12px 14px 14px;
+      max-height: 720px;
+      overflow: auto;
+    }
+
+    .action-item {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px;
+      background: #fbfcfb;
+    }
+
+    .action-item.red {
+      border-color: rgba(185, 74, 72, .30);
+      background: rgba(185, 74, 72, .06);
+    }
+
+    .action-item.yellow {
+      border-color: rgba(183, 121, 31, .30);
+      background: rgba(183, 121, 31, .07);
+    }
+
+    .action-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 7px;
+      font-weight: 760;
+    }
+
+    .action-copy {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    @media (max-width: 1180px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, minmax(150px, 1fr));
+      }
+
+      .visual-kpi-grid {
+        grid-template-columns: repeat(2, minmax(180px, 1fr));
+      }
+
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .drilldown-summary {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .linehaul-cost-summary {
+        grid-template-columns: repeat(3, minmax(160px, 1fr));
+      }
+
+      .terminal-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .terminal-kpis {
+        grid-template-columns: repeat(2, minmax(160px, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .topbar-inner {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi-grid, .panel-grid, .visual-kpi-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .kpi .value {
+        font-size: 24px;
+      }
+
+      .source-row {
+        grid-template-columns: 1fr;
+      }
+
+      .drilldown-summary {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .linehaul-cost-summary, .linehaul-analysis-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .terminal-hero {
+        grid-template-columns: 1fr;
+      }
+
+      .terminal-source {
+        text-align: left;
+      }
+
+      .terminal-kpis {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="title">
+          <h1>TMS YTD Control</h1>
+          <p>Static year-to-date analytics layout with all live data connections removed.</p>
+        </div>
+        <div class="actions">
+          <button id="refreshButton" class="primary-button" type="button" disabled>Offline Preview</button>
+          <button id="exportButton" class="icon-button" type="button" disabled>Export XLSX</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="page">
+      <nav class="page-tabs" aria-label="Analytics pages">
+        <button class="page-tab active" type="button" data-page="ytd">YTD Control</button>
+        <button class="page-tab" type="button" data-page="terminal">Terminal Performance</button>
+      </nav>
+
+      <section id="ytdPage" class="analytics-page">
+        <div id="statusLine" class="status-line"></div>
+
+      <section class="kpi-grid" aria-label="Key metrics">
+        <button class="kpi" type="button" data-drilldown="linehaul">
+          <div class="label">Linehaul Trips</div>
+          <div id="kpiLinehaul" class="value">0</div>
+          <div id="kpiLinehaulNote" class="note"></div>
+        </button>
+        <button class="kpi" type="button" data-drilldown="pickupDelivery">
+          <div class="label">Pickup/Delivery</div>
+          <div id="kpiPickupDelivery" class="value">0</div>
+          <div id="kpiPickupDeliveryNote" class="note"></div>
+        </button>
+        <button class="kpi" type="button" data-drilldown="mixed">
+          <div class="label">Mixed Trips</div>
+          <div id="kpiMixed" class="value">0</div>
+          <div id="kpiMixedNote" class="note"></div>
+        </button>
+      </section>
+
+      <section class="visual-kpi-grid" aria-label="Visual KPI metrics">
+        <article class="visual-kpi">
+          <div class="visual-kpi-header">
+            <div class="visual-kpi-title">MoM Linehaul Mode</div>
+            <div id="visualServiceValue" class="visual-kpi-value">0</div>
+          </div>
+          <div class="visual-kpi-chart"><canvas id="visualServiceChart"></canvas></div>
+        </article>
+        <article class="visual-kpi">
+          <div class="visual-kpi-header">
+            <div class="visual-kpi-title">MoM Total Linehaul Trips</div>
+            <div id="visualExecutionValue" class="visual-kpi-value">0</div>
+          </div>
+          <div class="visual-kpi-chart"><canvas id="visualExecutionChart"></canvas></div>
+        </article>
+        <article class="visual-kpi">
+          <div class="visual-kpi-header">
+            <div class="visual-kpi-title">MoM OTR Contracted Costs</div>
+            <div id="visualCostValue" class="visual-kpi-value">$0</div>
+          </div>
+          <div class="visual-kpi-chart"><canvas id="visualCostChart"></canvas></div>
+        </article>
+        <article class="visual-kpi">
+          <div class="visual-kpi-header">
+            <div class="visual-kpi-title">MoM Rail Linehaul Contracted Costs</div>
+            <div id="visualMonthValue" class="visual-kpi-value">0</div>
+          </div>
+          <div class="visual-kpi-chart"><canvas id="visualMonthChart"></canvas></div>
+        </article>
+      </section>
+
+      <section id="drilldownPanel" class="panel drilldown-panel" aria-live="polite">
+        <div class="panel-header">
+          <h2 id="drilldownTitle" class="panel-title">Metric Details</h2>
+          <div id="drilldownSubtitle" class="panel-subtitle"></div>
+        </div>
+        <div id="drilldownSummary" class="drilldown-summary"></div>
+        <div id="linehaulAnalysis" class="linehaul-analysis" hidden>
+          <div class="linehaul-cost-summary">
+            <div class="linehaul-cost-card">
+              <span>Contracted OTR YTD Cost</span>
+              <strong id="linehaulOtrCost">$0</strong>
+              <small id="linehaulOtrNote"></small>
+            </div>
+            <div class="linehaul-cost-card">
+              <span>Company Driver YTD Cost</span>
+              <strong id="linehaulCompanyCost">$0</strong>
+              <small id="linehaulCompanyNote"></small>
+            </div>
+            <div class="linehaul-cost-card">
+              <span>Zen Express YTD Cost</span>
+              <strong id="linehaulZenCost">$0</strong>
+              <small id="linehaulZenNote"></small>
+            </div>
+            <div class="linehaul-cost-card">
+              <span>Rail YTD Cost</span>
+              <strong id="linehaulRailCost">$0</strong>
+              <small id="linehaulRailNote"></small>
+            </div>
+            <div class="linehaul-cost-card">
+              <span>Estimated Rail Savings</span>
+              <strong id="linehaulSavings">$0</strong>
+              <small id="linehaulSavingsNote"></small>
+            </div>
+          </div>
+          <div class="linehaul-analysis-grid">
+            <article class="analysis-card wide">
+              <div class="analysis-card-header">
+                <h3>Contracted OTR By Lane</h3>
+                <span id="linehaulOtrTableNote"></span>
+              </div>
+              <div class="analysis-table">
+                <table>
+                  <thead><tr><th>Lane</th><th class="num">LH Trips</th><th class="num">LH Avg</th><th class="num">LH Cost</th><th class="num">P&D/Mixed Trips</th><th class="num">P&D/Mixed Cost</th></tr></thead>
+                  <tbody id="linehaulOtrBody"></tbody>
+                </table>
+              </div>
+            </article>
+            <article class="analysis-card wide">
+              <div class="analysis-card-header">
+                <h3>Company Drivers By Lane</h3>
+                <span id="linehaulCompanyTableNote"></span>
+              </div>
+              <div class="analysis-table">
+                <table>
+                  <thead><tr><th>Lane</th><th class="num">Trips</th><th class="num">Avg Cost</th><th class="num">YTD Cost</th></tr></thead>
+                  <tbody id="linehaulCompanyBody"></tbody>
+                </table>
+              </div>
+            </article>
+            <article class="analysis-card wide">
+              <div class="analysis-card-header">
+                <h3>Zen Express By Lane</h3>
+                <span id="linehaulZenTableNote"></span>
+              </div>
+              <div class="analysis-table">
+                <table>
+                  <thead><tr><th>Lane</th><th class="num">Trips</th><th class="num">Avg Cost</th><th class="num">YTD Cost</th></tr></thead>
+                  <tbody id="linehaulZenBody"></tbody>
+                </table>
+              </div>
+            </article>
+            <article class="analysis-card wide">
+              <div class="analysis-card-header">
+                <h3>Rail Provider By Lane</h3>
+                <span id="linehaulRailTableNote"></span>
+              </div>
+              <div class="analysis-table">
+                <table>
+                  <thead><tr><th>Lane</th><th class="num">Trips</th><th class="num">Avg Cost</th><th class="num">YTD Cost</th></tr></thead>
+                  <tbody id="linehaulRailBody"></tbody>
+                </table>
+              </div>
+            </article>
+            <article class="analysis-card wide">
+              <div class="analysis-card-header">
+                <h3>Rail Vs OTR Cost Comparison</h3>
+                <span>Same-lane benchmark</span>
+              </div>
+              <div class="analysis-table">
+                <table>
+                  <thead><tr><th>Lane</th><th class="num">Rail Trips</th><th class="num">Rail Avg</th><th class="num">OTR Avg</th><th class="num">Est. Savings</th></tr></thead>
+                  <tbody id="linehaulComparisonBody"></tbody>
+                </table>
+              </div>
+            </article>
+            <article class="analysis-card wide">
+              <div class="analysis-card-header">
+                <h3>Rail Lane Opportunity</h3>
+                <span id="linehaulRailOpportunityNote"></span>
+              </div>
+              <div class="analysis-table">
+                <table>
+                  <thead><tr><th>Lane</th><th class="num">Rail Trips</th><th class="num">Contracted OTR</th><th class="num">More Trips Eligible</th><th class="num">Potential Savings</th></tr></thead>
+                  <tbody id="linehaulRailOpportunityBody"></tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+          <div class="comparison-note">Estimated savings compares pure linehaul rail against pure linehaul contracted OTR on the same lane. Active pickup/delivery work is excluded from the benchmark.</div>
+          <div class="comparison-note">Rail lane opportunity only counts pure linehaul trips. Any trip with active pickup or delivery work is excluded from this rail conversion view.</div>
+        </div>
+        <div class="drilldown-tools" hidden aria-hidden="true">
+          <input id="drilldownSearch" class="drilldown-filter" type="search" placeholder="Filter dispatch, lane, status, carrier, driver">
+          <span id="drilldownCount"></span>
+        </div>
+        <div class="table-wrap drilldown-table" hidden aria-hidden="true">
+          <table>
+            <thead>
+              <tr>
+                <th>Dispatch</th>
+                <th>Date</th>
+                <th>Lane</th>
+                <th>Service</th>
+                <th>Mode</th>
+                <th>Status</th>
+                <th>Assigned To</th>
+                <th class="num">Revenue</th>
+                <th class="num">Hire Cost</th>
+              </tr>
+            </thead>
+            <tbody id="drilldownBody"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <div class="main-grid">
+        <div>
+          <section class="panel-grid">
+            <article class="panel">
+              <div class="panel-header">
+                <h2 class="panel-title">Trips By Month</h2>
+                <div class="panel-subtitle">YTD plus live de-dupe</div>
+              </div>
+              <div class="chart-wrap"><canvas id="monthChart"></canvas></div>
+            </article>
+            <article class="panel">
+              <div class="panel-header">
+                <h2 class="panel-title">Service Type</h2>
+                <div class="panel-subtitle">Linehaul, P/D, mixed</div>
+              </div>
+              <div class="chart-wrap"><canvas id="laneClassChart"></canvas></div>
+            </article>
+            <article class="panel">
+              <div class="panel-header">
+                <h2 class="panel-title">Execution Mode</h2>
+                <div class="panel-subtitle">Asset, contracted, rail</div>
+              </div>
+              <div class="chart-wrap"><canvas id="statusChart"></canvas></div>
+            </article>
+            <article class="panel">
+              <div class="panel-header">
+                <h2 class="panel-title">Carrier Cost Status</h2>
+                <div class="panel-subtitle">Non-assets require cost</div>
+              </div>
+              <div class="chart-wrap"><canvas id="typeChart"></canvas></div>
+            </article>
+          </section>
+
+          <section class="section">
+            <article class="panel">
+              <div class="panel-header">
+                <h2 class="panel-title">Top Lanes</h2>
+                <div class="panel-subtitle">Combined trip count</div>
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead><tr><th>Lane</th><th class="num">Trips</th></tr></thead>
+                  <tbody id="topLanesBody"></tbody>
+                </table>
+              </div>
+            </article>
+          </section>
+        </div>
+
+        <aside class="sidebar">
+          <article class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">Data Sources</h2>
+              <div id="sourceBadge" class="panel-subtitle"></div>
+            </div>
+            <div class="source-list">
+              <div class="source-row"><strong>Seed range</strong><span id="seedRange"></span></div>
+              <div class="source-row"><strong>Seed trips</strong><span id="seedTrips"></span></div>
+              <div class="source-row"><strong>Seed P/D/LH</strong><span id="seedPdlh"></span></div>
+              <div class="source-row"><strong>Live cache</strong><span id="liveRange"></span></div>
+              <div class="source-row"><strong>Live fetched</strong><span id="liveFetched"></span></div>
+              <div class="source-row"><strong>Detail scan</strong><span id="detailScan"></span></div>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">P/D/LH Lanes</h2>
+              <div class="panel-subtitle">Top lanes</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Lane</th><th class="num">Trips</th></tr></thead>
+                <tbody id="pdlhLaneBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">Recent P/D/LH Trips</h2>
+              <div class="panel-subtitle">Newest first</div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Dispatch</th><th>Lane</th><th>Tasks</th></tr></thead>
+                <tbody id="pdlhRecentBody"></tbody>
+              </table>
+            </div>
+          </article>
+        </aside>
+      </div>
+      </section>
+
+      <section id="terminalPage" class="analytics-page" hidden>
+        <div class="terminal-hero">
+          <div>
+            <h2>Terminal Performance</h2>
+            <p>FR8 APP TMS weekly performance view by origin terminal, using Trip Control revenue, dispatch cost, and company-driver day allocation.</p>
+          </div>
+          <div class="terminal-source">
+            <button id="terminalRefreshButton" class="primary-button" type="button">Refresh Terminal Data</button>
+            <span id="terminalSourceText">Not loaded</span>
+          </div>
+        </div>
+
+        <div id="terminalStatusLine" class="status-line"></div>
+
+        <section class="terminal-kpis" aria-label="Terminal performance company metrics">
+          <div class="terminal-kpi"><span>Revenue MTD</span><strong id="terminalRevMtd">$0</strong><small id="terminalRevNote"></small></div>
+          <div class="terminal-kpi"><span>Gross Profit MTD</span><strong id="terminalGpMtd">$0</strong><small id="terminalGpNote"></small></div>
+          <div class="terminal-kpi"><span>GP % MTD</span><strong id="terminalGpPctMtd">0%</strong><small id="terminalGpPctNote"></small></div>
+          <div class="terminal-kpi"><span>Dispatches MTD</span><strong id="terminalLoadsMtd">0</strong><small id="terminalLoadsNote"></small></div>
+        </section>
+
+        <div class="terminal-layout">
+          <article class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">Per-Terminal Summary</h2>
+              <div id="terminalPeriodText" class="panel-subtitle"></div>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Terminal</th>
+                    <th class="num">MTD Rev</th>
+                    <th class="num">GP$</th>
+                    <th class="num">GP%</th>
+                    <th class="num">Dispatches</th>
+                    <th class="num">Rev YoY</th>
+                    <th class="num">GP% YoY</th>
+                    <th>Rev</th>
+                    <th>GP%</th>
+                  </tr>
+                </thead>
+                <tbody id="terminalSummaryBody"></tbody>
+              </table>
+            </div>
+          </article>
+
+          <article class="panel">
+            <div class="panel-header">
+              <h2 class="panel-title">Status & Actions</h2>
+              <div id="terminalActionCount" class="panel-subtitle"></div>
+            </div>
+            <div id="terminalActionList" class="action-list"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  
+</body>
+</html>
