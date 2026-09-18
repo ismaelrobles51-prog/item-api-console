@@ -2,6 +2,8 @@
 
 Static, endpoint-free presentation layouts transferred from the local TMS Proxy workspace.
 
+The primary dashboard uses the ItemGPT visual system: Inter/system typography, black and charcoal surfaces, white/gray text, subtle borders, and a purple accent.
+
 ## Published pages
 
 - Main TMS Agent layout: `index.html`

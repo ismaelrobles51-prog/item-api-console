@@ -1,10 +1,10 @@
 <!-- Offline TMS Agent layout. Scripts, external resources, and network endpoints are intentionally excluded. -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>FR8 Dispatch — TMS AI Agent</title>
+<title>ItemGPT — Operations Workspace</title>
 
 
 
@@ -23,7 +23,7 @@
   --yellow:#92400e;--yellow-bg:#fffbeb;--yellow-bdr:#fde68a;
   --purple:#6d28d9;--purple-bg:#f5f3ff;--purple-bdr:#ddd6fe;
   --r:8px;--rl:12px;
-  --mono:'DM Mono', monospace;--sans:'Inter', sans-serif;
+  --mono:"SFMono-Regular",Consolas,"Liberation Mono",monospace;--sans:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;
   --sidebar-w:220px;--sidebar-w-col:64px;
   --shadow-pop:0 10px 40px rgba(0,0,0,.15);
   --shadow-fab:0 4px 16px rgba(37,99,235,.35);
@@ -33,21 +33,21 @@
   --focus-ring:rgba(37,99,235,.1);
 }
 [data-theme="dark"] {
-  --bg:#0b1220;--bg2:#111a2e;--bg3:#1a2440;--bg4:#253052;
-  --border:#22304d;--border2:#334166;
-  --text:#e2e8f0;--text2:#94a3b8;--text3:#64748b;
-  --blue:#60a5fa;--blue2:#3b82f6;--blue-bg:#172554;--blue-bdr:#1e3a8a;
-  --orange:#fb923c;--orange-bg:#3a1d0a;--orange-bdr:#7c2d12;
-  --green:#4ade80;--green-bg:#0e2e1e;--green-bdr:#14532d;
-  --red:#f87171;--red-bg:#2e1012;--red-bdr:#7f1d1d;
-  --yellow:#fbbf24;--yellow-bg:#2d2108;--yellow-bdr:#854d0e;
-  --purple:#a78bfa;--purple-bg:#1e1b4b;--purple-bdr:#4c1d95;
+  --bg:#000000;--bg2:#141414;--bg3:#202122;--bg4:#2d3032;
+  --border:#292929;--border2:#3a3a3a;
+  --text:#ffffff;--text2:#b8b8b8;--text3:#999999;
+  --blue:#9560cf;--blue2:#7d3cbd;--blue-bg:rgba(125,60,189,.16);--blue-bdr:#4b2c66;
+  --orange:#f59e0b;--orange-bg:rgba(245,158,11,.12);--orange-bdr:#6f4a12;
+  --green:#10b981;--green-bg:rgba(16,185,129,.12);--green-bdr:#155e4a;
+  --red:#ef4444;--red-bg:rgba(239,68,68,.12);--red-bdr:#7f1d1d;
+  --yellow:#f59e0b;--yellow-bg:rgba(245,158,11,.12);--yellow-bdr:#783f0a;
+  --purple:#7d3cbd;--purple-bg:rgba(125,60,189,.16);--purple-bdr:#4b2c66;
   --shadow-pop:0 10px 40px rgba(0,0,0,.5);
-  --shadow-fab:0 4px 16px rgba(59,130,246,.4);
-  --shadow-fab-hover:0 6px 22px rgba(59,130,246,.55);
+  --shadow-fab:0 4px 16px rgba(125,60,189,.40);
+  --shadow-fab-hover:0 6px 22px rgba(125,60,189,.55);
   --shadow-card:0 2px 8px rgba(0,0,0,.25);
   --shadow-card-hover:0 4px 12px rgba(0,0,0,.35);
-  --focus-ring:rgba(59,130,246,.2);
+  --focus-ring:rgba(125,60,189,.25);
 }
 
 /* ===== base.css ===== */
@@ -56,7 +56,7 @@ body, .lsb, .main, .main-wrap, .ai-popup, .panel, .mc, .cgroup, .term-btn, .dtab
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;width:100%;overflow:hidden;}
-body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--text);}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Open Sans","Helvetica Neue",sans-serif;font-size:13px;letter-spacing:.015em;background:var(--bg);color:var(--text);}
 
 .view{display:none;}
 .view.active{display:block;}
@@ -1550,7 +1550,7 @@ body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--tex
       <div class="lsb-logo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
       </div>
-      <div class="lsb-brand">FR8 Dispatch</div>
+      <div class="lsb-brand">ItemGPT</div>
       <button class="lsb-toggle" id="sidebar-toggle" type="button" title="Collapse sidebar" aria-label="Collapse sidebar" aria-expanded="true">
         <svg id="sidebar-toggle-icon" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
       </button>
@@ -1654,15 +1654,15 @@ body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--tex
   <div class="main-wrap">
     <div class="hdr">
       <div>
-        <div class="hdr-title" id="page-title">FR8 Dispatch</div>
-        <div class="hdr-sub" id="page-sub">Hub &amp; Spoke Operations &middot; TMS AI Agent</div>
+        <div class="hdr-title" id="page-title">ItemGPT</div>
+        <div class="hdr-sub" id="page-sub">Here is what looks worth picking up today.</div>
       </div>
       <div class="hdr-right">
         <button id="theme-toggle" class="theme-toggle" title="Toggle theme">
           <svg id="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>
           <svg id="theme-icon-moon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
         </button>
-        <div id="status-badge" class="status-pill idle">Offline layout</div>
+        <div id="status-badge" class="status-pill idle">Local workspace</div>
       </div>
     </div>
 
@@ -2796,11 +2796,11 @@ body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--tex
     </div>
 
     <div class="footer">
-      Endpoint-free local layout <span class="dot-sep">&middot;</span> No external connections
+      ItemGPT operations workspace <span class="dot-sep">&middot;</span> No external connections
     </div>
   </div>
 
-  <button class="ai-fab" id="ai-fab" title="AI Dispatch Agent">
+  <button class="ai-fab" id="ai-fab" title="ItemGPT Agent">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
     <span class="ai-fab-dot" id="ai-fab-dot"></span>
   </button>
@@ -2836,8 +2836,8 @@ body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--tex
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue2)" stroke-width="2"><path d="M12 2L9.5 8.5 3 9.5l5 4.5-1.5 7L12 17l5.5 4-1.5-7 5-4.5-6.5-1z"/></svg>
         </div>
         <div>
-          <div class="sidebar-title">AI Dispatch Agent</div>
-          <div class="sidebar-sub">Ask about orders, PROs, shippers</div>
+          <div class="sidebar-title">ItemGPT Agent</div>
+          <div class="sidebar-sub">Ask about operations, orders, and trips</div>
         </div>
       </div>
       <button class="ai-close" title="Close">×</button>
@@ -2850,7 +2850,7 @@ body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--tex
       </div>
     </div>
     <div class="chat-bar">
-      <input id="chat-input" type="text" placeholder="Ask about orders..." />
+      <input id="chat-input" type="text" placeholder="Message ItemGPT..." />
       <button class="send-btn" id="send-btn">→</button>
     </div>
   </div>
@@ -2861,7 +2861,7 @@ body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--tex
 /* Offline-only UI shell. This script changes visible panels and theme; it performs no network requests. */
 (function () {
   var pages = {
-    dashboard: ["FR8 Dispatch", "Hub & Spoke Operations · TMS AI Agent", "Linehaul Manager"],
+    dashboard: ["ItemGPT", "Here is what looks worth picking up today.", "Linehaul Manager"],
     orders: ["Orders", "Order Management", "Orders"],
     quotes: ["New Quotation", "Quotes · Offline pricing layout", "Quotes"],
     trips: ["Trips", "Trip Management", "Trips"],
