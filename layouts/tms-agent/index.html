@@ -2857,7 +2857,78 @@ body{font-family:var(--sans);font-size:13px;background:var(--bg);color:var(--tex
 
 </div>
 
-<!-- Script load order matters: config → state → routing → api → ui-shell → chat → page modules → boot -->
+<script>
+/* Offline-only UI shell. This script changes visible panels and theme; it performs no network requests. */
+(function () {
+  var pages = {
+    dashboard: ["FR8 Dispatch", "Hub & Spoke Operations · TMS AI Agent", "Linehaul Manager"],
+    orders: ["Orders", "Order Management", "Orders"],
+    quotes: ["New Quotation", "Quotes · Offline pricing layout", "Quotes"],
+    trips: ["Trips", "Trip Management", "Trips"],
+    shipments: ["Shipments", "Shipment Management", "Shipments"],
+    consolidation: ["Consolidation Manager", "Consolidation Opportunities", "Consolidation Manager"],
+    brokerage: ["Brokerage", "Brokerage Operations", "Brokerage"],
+    "local-pd": ["Local P&D", "Pickup & Delivery Operations", "Local P&D"],
+    terminals: ["Terminals", "Network Directory", "Terminals"],
+    drivers: ["Drivers", "Driver Management", "Drivers"],
+    audit: ["Freight Audit/Entry", "Freight Bill Review", "Freight Audit/Entry"],
+    analytics: ["Analytics", "Network Performance", "Analytics"],
+    settings: ["Settings", "Workspace Preferences", "Settings"]
+  };
+
+  function showPage(name, updateHash) {
+    var target = document.getElementById("view-" + name);
+    if (!target) return;
+    document.querySelectorAll(".view").forEach(function (view) {
+      view.classList.toggle("active", view === target);
+    });
+    document.querySelectorAll(".lsb-item[data-view]").forEach(function (item) {
+      item.classList.toggle("active", item.getAttribute("data-view") === name);
+    });
+    document.querySelectorAll(".lsb-subnav").forEach(function (subnav) {
+      subnav.classList.remove("open");
+    });
+    var relatedSubnav = document.getElementById(name + "-subnav");
+    if (relatedSubnav) relatedSubnav.classList.add("open");
+    var copy = pages[name] || [name, "Offline layout", name];
+    document.getElementById("page-title").textContent = copy[0];
+    document.getElementById("page-sub").textContent = copy[1];
+    var tab = document.querySelector("#dashboard-tabs .ntab");
+    if (tab) tab.textContent = copy[2];
+    document.documentElement.scrollTop = 0;
+    if (updateHash && history.replaceState) history.replaceState(null, "", "#" + name);
+  }
+
+  document.querySelectorAll("[data-view]").forEach(function (control) {
+    control.addEventListener("click", function () {
+      showPage(control.getAttribute("data-view"), true);
+    });
+  });
+
+  var themeButton = document.getElementById("theme-toggle");
+  if (themeButton) themeButton.addEventListener("click", function () {
+    var dark = document.documentElement.getAttribute("data-theme") === "dark";
+    document.documentElement.toggleAttribute("data-theme", !dark);
+    if (!dark) document.documentElement.setAttribute("data-theme", "dark");
+    var sun = document.getElementById("theme-icon-sun");
+    var moon = document.getElementById("theme-icon-moon");
+    if (sun) sun.style.display = dark ? "" : "none";
+    if (moon) moon.style.display = dark ? "none" : "";
+  });
+
+  function toggleSidebar() {
+    var app = document.getElementById("app");
+    if (app) app.classList.toggle("collapsed");
+  }
+  var topCollapse = document.getElementById("sidebar-toggle");
+  var bottomCollapse = document.getElementById("collapse-bottom-btn");
+  if (topCollapse) topCollapse.addEventListener("click", toggleSidebar);
+  if (bottomCollapse) bottomCollapse.addEventListener("click", toggleSidebar);
+
+  var initial = location.hash.replace(/^#/, "");
+  showPage(pages[initial] ? initial : "dashboard", false);
+}());
+</script>
 
 </body>
 </html>
